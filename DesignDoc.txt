@@ -1,0 +1,85 @@
+// =================== CS251 DEX Project =================== // 
+//                      Design Document                      //
+//                          Names                            //
+// ========================================================= //  
+
+Benjamin Wittenbrink
+
+1. Explain why adding and removing liquidity to your exchange does not change the exchange rate.
+
+Adding and removing liquidity does not change the exchange rate because we always add/remove equal 
+amounts ETH and tokens (in terms of value). For example, when someone adds liquidity, they specify the 
+amount of ETH they want to add to the pool (by sending that amount), and we calculate the respective amount
+of tokens that is equal to that amount using the current ETH price (token_reserves / eth_reserves), i.e. 
+ensuring the value of ETH being added = value of tokens being added. Hence, the exchange rate does not change 
+because we are adding the same amount of each to the pool. 
+
+As a simple example, consider the default pool with 5000 ETH and 5000 Tokens. Thus, the exchange rate is 1 ETH for 1 Token. 
+If someone were to add a liquidity of 100 ETH, this would be the equivalent of 100 Tokens, as the exchange rate 
+is 1:1. Consequently, the new pool would be 5100 ETH and 5100 Tokens. Thus, the new exchange rate is also 1:1.
+Hence, adding liquidity did not change the exchange rate.
+
+2. Explain your scheme for rewarding liquidity providers and justify the design decisions you made. How does it satisfy the liquidity rewards requirements outlined in Section 7?
+
+In order to provide liquidity providers with rewards, I maintain state variables `eth_fees_pool` and `tok_fees_pool`. These 
+variables are unsigned integers and store the value of the accumulated ETH and token fees, respectively. Everytime a swap is completed, 
+a fraction of the amount (given by swap_fee_numerator / swap_fee_denominator = 0.05) sent is added to the respective 
+fee pool, i.e. for swapETHForTokens the fee would be denominated in ETH and thus would be added to the ETH state variable. 
+The ownership of the money stored in these variables is in accord with the liquidity shares maintained in the `lps` mapping. 
+Everytime either add/removeLiquidity is called, these variables add added to the to the reserves and reset(to 0). In effect, 
+this accomplishes paying out the liquidity providers their rewards, as the values of the fees are now reflected in the 
+liquidity pool, which the providers have an explicit share of. Importantly, this does not allow a liquidity provider to have 
+a greater share in a fee than they had at the time of the transaction, as the pool is reset everytime liquidity is added or removed 
+(which is what would change the liquidity provider shares).
+
+The design satisfies the liquidity requirements: 
+    1. as for every swap transaction, the person performing the swap is charged 5 percent.
+    2. as when a swap occurs, the amount the person receives is equal to (1 - 0.05) times the amount that  
+    the person sent. E.g. a user swapping 100 ETH, receives the equivalent of 95 ETH.
+    3. as the fee that is collected, is subsequently paid to the providers in accord with their proportion  of the 
+    overall liquidity pool. Moreover, the provider does not have to do anything aside from calling removeLiquidity to 
+    collect their rewards. Finally, the rewards are never sent out of the exchange to the providers every time a 
+    swap takes place.
+    4. as fee reinvestment happens on every add/removeLiquidity call, thereby not violating the constant product 
+    formula (xy = k). Thus, we only add the fees when we are already going to recalculate k (because a user has added
+    and removed liquidity).
+
+
+3. Describe at least one method you used to minimize your exchange contract's gas usage. Why was this method effective?
+
+Two relevant design choices when considering gas usage are the decisiosn to 1. store shares in `lps` as opposed to actual amounts 
+and 2. store fees in two state variables `eth_fees_pool` and `tok_fees_pool`. This means that on any given swap, we only need to calculate 
+the fee (one multiplication and one division operation) and add it to the respective `fees_pool` variable. Since `lps` captures 
+the share each provider is entitled to of the liquidity pool, it also captures their entitled share to the fee pool. Thus, 
+we do not have to calculate how much of the fees each provider is entitled to -- hence it only takes three operations to
+store this information. In exchange, the add/removeLiquidity functions are slightly more gas intensive, as they need to 
+recalculate each provider's new share. However, this also presents an efficient opportunity for fee reinvestment; since each 
+provider is entitled to the fee pool in accord with their shares, we can simply add the fees variables to their respective
+reserves and recalculate the new shares. Thus, this only introduces two more operations (addition and setting the variables to 0). 
+
+Note: that relative to having `lps` store absolute values, these decisions make add/removeLiquidity more gas intensive. 
+As, if `lps` stored absolute values, we wouldl not have to loop over the lps to update on add/remove. However, the swap 
+methods would be more gas  intensive, as we would have to loop over the providers to deterimne the share of the fee they're 
+entitled to. Since I expect swaps to be more frequent than add/removeLiquidity calls on the exchange, this seems like a good
+tradeoff.
+
+In addition, to minimize the contract's gas usage, we tried to write a nicely deocmposed contract, where all of the variables
+have a purpose and are as simple as above. We make sure to loop as rarely as possible (only once per add/remove Liquidity). The goal
+was to do this while still achieving easily legible code. 
+
+4. Optional Feedback:
+4a. How much time did you spend on the assignment?
+
+Not exactly sure; definitely more than other assignments in this course. Having Thanksgiving break was definitely helpful. 
+
+4b. What is one thing that would have been useful to know before starting the assignment?
+
+The exisitng resources for starting the assingment were quite good. 
+
+4c. If you could change one with about this assignment, what would you change?
+
+NA
+
+4d. Please feel free to include any other feedback you may have below.
+
+NA
