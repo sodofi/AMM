@@ -3,7 +3,7 @@
 //                          Names                            //
 // ========================================================= //  
 
-Benjamin Wittenbrink
+Sophia Dew Benjamin Wittenbrink
 
 1. Explain why adding and removing liquidity to your exchange does not change the exchange rate.
 
