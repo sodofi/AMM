@@ -7,8 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  
 // Your token contract
 contract Token is Ownable, ERC20 {
-    string private constant _symbol = 'BJC';                 // TODO: Give your token a symbol (all caps!)
-    string private constant _name = 'BenjiCoin';                   // TODO: Give your token a name
+    string private constant _symbol = 'COCO';                 // TODO: Give your token a symbol (all caps!)
+    string private constant _name = 'CocoCoin';                   // TODO: Give your token a name
 
     constructor() ERC20(_name, _symbol) {}
 
