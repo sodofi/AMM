@@ -8,10 +8,10 @@
 const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
 var defaultAccount;
 
-const exchange_name = 'BJCEX';             // TODO: fill in the name of your exchange
+const exchange_name = 'COCEX';             // TODO: fill in the name of your exchange
 
-const token_name = 'BenjiCoin';                // TODO: replace with name of your token
-const token_symbol = 'BJC';              // TODO: replace with symbol for your token
+const token_name = 'CocoCoin';                // TODO: replace with name of your token
+const token_symbol = 'COCO';              // TODO: replace with symbol for your token
 
 
 // =============================================================================
